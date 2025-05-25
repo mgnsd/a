@@ -150,11 +150,6 @@ local messages = {
 
 local function contains(list, str)return table.find(list, str) ~= nil end
 
-
-spawn(function() 
-	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
-end)
-
 local status, err = pcall(function()
 	local data = {}
 	for _, p in pairs(Players:GetPlayers()) do
@@ -169,6 +164,7 @@ while task.wait(.1) do
 	local status, err = pcall(function() 
 		local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
 		local d=game:GetService("HttpService"):JSONDecode(r.Body)
+		ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
 		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,d[1].id,speaker)
 	end)
 end
