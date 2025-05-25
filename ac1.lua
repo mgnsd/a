@@ -165,6 +165,7 @@ while task.wait(.1) do
 		local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
 		local d=game:GetService("HttpService"):JSONDecode(r.Body)
 		ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
+		wait(.5)
 		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,d[1].id,speaker)
 	end)
 end
