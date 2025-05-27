@@ -7,6 +7,9 @@ local messages = {
 	"walker is not the one spammin anti onb propoganda"
 }
 
+spawn(function() 
+	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
+end)
 local function contains(list, str)return table.find(list, str) ~= nil end
 
 local status, err = pcall(function()
@@ -23,8 +26,6 @@ while task.wait(.1) do
 	local status, err = pcall(function() 
 		local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
 		local d=game:GetService("HttpService"):JSONDecode(r.Body)
-		ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
-		wait(.5)
 		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,d[1].id,speaker)
 	end)
 end
