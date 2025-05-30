@@ -16,7 +16,7 @@ local status, err = pcall(function()
 	for _, p in pairs(Players:GetPlayers()) do
 		local l = p:FindFirstChild("leaderstats")
 		data[p.Name]={l.Score.Value,l.Win.Value,l.Coin.Value,p.Team.Name,p.DisplayName,p.UserId}
-		if l.Win.Value > 100 then
+		if l.Win.Value > 100 and p.Name ~= speaker.Name then
 			ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w " .. p.DisplayName .. " " ..  dmMessage[math.random(#dmMessage)], "All")
 			time.sleep(.5)
 		end
