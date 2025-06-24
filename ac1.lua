@@ -9,10 +9,6 @@ local r=request({Url="https://server.blitzmarine.com/api/ads?id="..game.JobId,Me
 print(r.Body)
 local messages=game:GetService("HttpService"):JSONDecode(r.Body) 
 
-spawn(function() 
-	wait(1)
-	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
-end)
 local function contains(list, str)return table.find(list, str) ~= nil end
 
 local status, err = pcall(function()
@@ -23,6 +19,7 @@ local status, err = pcall(function()
 	end
 
 	request({Url="https://server.blitzmarine.com/api/update?&bot="..speaker.Name,Method="POST",Body=game:GetService("HttpService"):JSONEncode({id=game.JobId,players=data,islands={},japan=1,usa=1,vehicles={},time=1}),Headers={["Content-Type"]="application/json"}})
+	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
 end)
 
 while task.wait(.1) do
