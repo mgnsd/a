@@ -10,6 +10,7 @@ print(r.Body)
 local messages=game:GetService("HttpService"):JSONDecode(r.Body) 
 
 spawn(function() 
+	wait(1)
 	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
 end)
 local function contains(list, str)return table.find(list, str) ~= nil end
@@ -19,10 +20,6 @@ local status, err = pcall(function()
 	for _, p in pairs(Players:GetPlayers()) do
 		local l = p:FindFirstChild("leaderstats")
 		data[p.Name]={l.Score.Value,l.Win.Value,l.Coin.Value,p.Team.Name,p.DisplayName,p.UserId}
-		if l.Win.Value > 100 and p.Name ~= speaker.Name then
-			ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w " .. p.DisplayName .. " " ..  dmMessage[math.random(#dmMessage)], "All")
-			time.sleep(.5)
-		end
 	end
 
 	request({Url="https://server.blitzmarine.com/api/update?&bot="..speaker.Name,Method="POST",Body=game:GetService("HttpService"):JSONEncode({id=game.JobId,players=data,islands={},japan=1,usa=1,vehicles={},time=1}),Headers={["Content-Type"]="application/json"}})
