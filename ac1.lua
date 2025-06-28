@@ -32,14 +32,14 @@ function hopServer()
 end
 	
 local status, err = pcall(function()
-	local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
+	local r=request({Url="https://server.blitzmarine.com/api/targets",Method="GET"})
 	local d=game:GetService("HttpService"):JSONDecode(r.Body)
 	local targets = {}
 	for key, value in pairs(d) do
 		table.insert(targets, string.lower(key))
 	end
 	
-	
+
 	local data = {}
 	for _, p in pairs(Players:GetPlayers()) do
 		if isin(string.lower(p.Name), targets) then
