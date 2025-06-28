@@ -165,7 +165,7 @@ end
 function KillPlanes(location, team) 
 	local planes = processAll(planeNames)
 	for i, p in ipairs(planes) do
-		if p.Team.Value == team then
+		if p.Team.Value == team and p then
 			p:SetPrimaryPartCFrame(location)
 		end
 	end
