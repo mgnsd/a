@@ -20,6 +20,11 @@ if workspace.Lobby:FindFirstChild("TeamChange") then
 	workspace.Lobby.TeamChange:Destroy()
 end
 
+spawn(function()
+	task.wait(5)
+	hopServer()
+end)
+
 function isin(s, t) for _,v in ipairs(t) do if v==s then return true end end end
 function hopServer()
 	while task.wait(.1) do
