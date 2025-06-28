@@ -21,7 +21,7 @@ if workspace.Lobby:FindFirstChild("TeamChange") then
 end
 
 spawn(function()
-	task.wait(5)
+	task.wait(10)
 	hopServer()
 end)
 
@@ -235,7 +235,7 @@ end
 
 sequence2 = true
 spawn(function()
-	task.wait(2)
+	task.wait(5)
 	sequence2 = false
 end)
 Players.PlayerAdded:Connect(function(player)
