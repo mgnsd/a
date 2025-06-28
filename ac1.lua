@@ -20,11 +20,6 @@ if workspace.Lobby:FindFirstChild("TeamChange") then
 	workspace.Lobby.TeamChange:Destroy()
 end
 
-spawn(function()
-	task.wait(10)
-	hopServer()
-end)
-
 function isin(s, t) for _,v in ipairs(t) do if v==s then return true end end end
 function hopServer()
 	while task.wait(.1) do
@@ -37,14 +32,14 @@ function hopServer()
 end
 	
 local status, err = pcall(function()
-	local r=request({Url="https://server.blitzmarine.com/api/targets",Method="GET"})
+	local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
 	local d=game:GetService("HttpService"):JSONDecode(r.Body)
 	local targets = {}
 	for key, value in pairs(d) do
 		table.insert(targets, string.lower(key))
 	end
 	
-
+	
 	local data = {}
 	for _, p in pairs(Players:GetPlayers()) do
 		if isin(string.lower(p.Name), targets) then
@@ -170,8 +165,8 @@ end
 function KillPlanes(location, team) 
 	local planes = processAll(planeNames)
 	for i, p in ipairs(planes) do
-		if p.Team.Value == team and p then
-			pcall(function() p:SetPrimaryPartCFrame(location) end)
+		if p.Team.Value == team then
+			p:SetPrimaryPartCFrame(location)
 		end
 	end
 end
@@ -205,10 +200,54 @@ local function shoot()
 	ShootEvent:FireServer(unpack(args))
 end
 
-local sequence2 = true
+local sequence2 = false
 
 print("Starting")
 center = CFrame.new(0, 0, 0)
+workspace.ChildAdded:Connect(function(child)
+	if not sequence2 then
+		task.defer(function()
+			if child and child.Parent and child.name == "bullet" then
+				child:Destroy()
+			end
+		end)
+	end
+end)
+
+
+noclip()
+spawn(unsit)
+spawn(fling)
+spawn(spin)
+spawn(respawncheck)
+
+local sequence1 = true
+spawn(function()
+	task.wait(60)
+	sequence1 = false
+end)
+repeat RunService.Heartbeat:Wait()
+	local ships = processAll(shipNames)
+	if #ships ~= 0 then
+		for i, ship in ipairs(ships) do
+			local Seat = ship:FindFirstChild("Seat")
+
+			local ticks = 0
+			repeat RunService.Heartbeat:Wait()
+				if Seat then center = Seat.CFrame end
+				ticks += 1
+			until not Seat or (Seat and Seat.Velocity and Seat.Velocity.Magnitude > 2000) or ticks > 100
+		end
+	else
+		sequence1 = false
+	end
+until not sequence1
+
+print("Sequence 1 finished")
+repeat task.wait() until speaker.Character:FindFirstChild("Humanoid") and speaker.Character.Humanoid.Health > 0
+sitting = false
+flinging = false
+spinning = false
 
 local parts = {}
 if speaker.Team.Name == "Japan" then
@@ -222,7 +261,6 @@ else
 end
 
 local seat = parts[1]
-if not seat then hopServer() end
 local humanoid = speaker.Character:WaitForChild("Humanoid")
 seat:Sit(humanoid)
 
@@ -235,7 +273,7 @@ end
 
 sequence2 = true
 spawn(function()
-	task.wait(5)
+	task.wait(2)
 	sequence2 = false
 end)
 Players.PlayerAdded:Connect(function(player)
