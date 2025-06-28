@@ -217,6 +217,7 @@ else
 end
 
 local seat = parts[1]
+if not seat then hopServer() end
 local humanoid = speaker.Character:WaitForChild("Humanoid")
 seat:Sit(humanoid)
 
