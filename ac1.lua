@@ -200,54 +200,10 @@ local function shoot()
 	ShootEvent:FireServer(unpack(args))
 end
 
-local sequence2 = false
+local sequence2 = true
 
 print("Starting")
 center = CFrame.new(0, 0, 0)
-workspace.ChildAdded:Connect(function(child)
-	if not sequence2 then
-		task.defer(function()
-			if child and child.Parent and child.name == "bullet" then
-				child:Destroy()
-			end
-		end)
-	end
-end)
-
-
-noclip()
-spawn(unsit)
-spawn(fling)
-spawn(spin)
-spawn(respawncheck)
-
-local sequence1 = true
-spawn(function()
-	task.wait(60)
-	sequence1 = false
-end)
-repeat RunService.Heartbeat:Wait()
-	local ships = processAll(shipNames)
-	if #ships ~= 0 then
-		for i, ship in ipairs(ships) do
-			local Seat = ship:FindFirstChild("Seat")
-
-			local ticks = 0
-			repeat RunService.Heartbeat:Wait()
-				if Seat then center = Seat.CFrame end
-				ticks += 1
-			until not Seat or (Seat and Seat.Velocity and Seat.Velocity.Magnitude > 2000) or ticks > 100
-		end
-	else
-		sequence1 = false
-	end
-until not sequence1
-
-print("Sequence 1 finished")
-repeat task.wait() until speaker.Character:FindFirstChild("Humanoid") and speaker.Character.Humanoid.Health > 0
-sitting = false
-flinging = false
-spinning = false
 
 local parts = {}
 if speaker.Team.Name == "Japan" then
