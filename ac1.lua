@@ -114,7 +114,7 @@ local function shoot()
 end
 
 spawn(function()
-	task.wait(10)
+	task.wait(8)
 	hopServer()
 end)
 
@@ -164,7 +164,7 @@ task.wait(.5)
 
 sequence2 = true
 spawn(function()
-	task.wait(3)
+	task.wait(2)
 	sequence2 = false
 end)
 
