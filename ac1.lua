@@ -13,14 +13,8 @@ local flinging = false
 local spinning = false
 speaker.SimulationRadius = math.huge 
 
-if workspace:FindFirstChild("Setting") then
-	workspace.Setting:Destroy()
-end
-if workspace.Lobby:FindFirstChild("TeamChange") then
-	workspace.Lobby.TeamChange:Destroy()
-end
-
 function isin(s, t) for _,v in ipairs(t) do if v==s then return true end end end
+
 function hopServer()
 	while task.wait(.1) do
 		local status, err = pcall(function() 
@@ -30,27 +24,6 @@ function hopServer()
 		end)
 	end
 end
-	
-local status, err = pcall(function()
-	local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
-	local d=game:GetService("HttpService"):JSONDecode(r.Body)
-	local targets = {}
-	for key, value in pairs(d) do
-		table.insert(targets, string.lower(key))
-	end
-	
-	
-	local data = {}
-	for _, p in pairs(Players:GetPlayers()) do
-		if isin(string.lower(p.Name), targets) then
-			hopServer()	
-		end
-		local l = p:FindFirstChild("leaderstats")
-		data[p.Name]={l.Score.Value,l.Win.Value,l.Coin.Value,p.Team.Name,p.DisplayName,p.UserId}
-	end
-
-	request({Url="https://server.blitzmarine.com/api/update?&bot="..speaker.Name,Method="POST",Body=game:GetService("HttpService"):JSONEncode({id=game.JobId,players=data,islands={},japan=1,usa=1,vehicles={},time=1}),Headers={["Content-Type"]="application/json"}})
-end)
 
 function getRoot(char)
 	return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso"))
@@ -66,82 +39,6 @@ function processAll(index)
 	end
 	return locations
 end 
-
-local function noclip()
-	local player = game.Players.LocalPlayer
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoid = character:WaitForChild("Humanoid")
-
-	humanoid.PlatformStand = true
-
-	for _, part in pairs(character:GetChildren()) do
-		if part:IsA("BasePart") then
-			part.CanCollide = not true
-		end
-	end
-end
-
-function unsit()
-	sitting = true
-	repeat RunService.Heartbeat:Wait()
-		local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-		if humanoid and humanoid.Sit then
-			humanoid.Sit = false
-		end
-	until not sitting
-end
-
-function fling()
-	flinging = true
-	repeat RunService.Heartbeat:Wait()
-		if not flinging then return end
-		local character = speaker.Character
-		local root = getRoot(character)
-		local vel, movel = nil, 0.1
-
-		while not (character and character.Parent and root and root.Parent) do
-			if not flinging then break end
-			RunService.Heartbeat:Wait()
-			character = speaker.Character
-			root = getRoot(character)
-		end
-
-		vel = root.Velocity
-		root.Velocity = Vector3.new(1e9, 1e9 * 10, 1e9)
-
-		RunService.RenderStepped:Wait()
-		if character and character.Parent and root and root.Parent then
-			root.Velocity = vel
-		end
-
-		RunService.Stepped:Wait()
-		if character and character.Parent and root and root.Parent then
-			root.Velocity = vel + Vector3.new(0, movel, 0)
-			movel = movel * -1
-		end
-	until not flinging
-end
-
-function spin()
-	spinning = true
-	local angle = 0
-	repeat RunService.Heartbeat:Wait()
-		local character = speaker.Character
-		if character and character.PrimaryPart then
-			local hrp = character.PrimaryPart
-			hrp.CFrame = center * CFrame.Angles(math.rad(angle), 0, 0)
-			angle += 80
-		end
-	until not spinning
-end
-
-function respawncheck()
-	speaker.CharacterAdded:Connect(function(char) 
-		spawn(unsit)
-		spawn(fling)
-		spawn(spin)
-	end)
-end
 
 function getBase(obj)
 	local partsList = {}
@@ -171,11 +68,27 @@ function KillPlanes(location, team)
 	end
 end
 
+local function isSitting(character)
+	return character:FindFirstChild("Humanoid") and character.Humanoid.Sit
+end
+
 local function teleportPlayer(player)
 	local character = player.Character
 	if character and character:FindFirstChild("HumanoidRootPart") then
 		local rootPart = character.HumanoidRootPart
 		local localRootPart = speaker.Character and speaker.Character:FindFirstChild("HumanoidRootPart")
+		--[[if isSitting(character) then
+			local humanoid = character:FindFirstChild("Humanoid")
+			local seat = humanoid and humanoid.SeatPart
+			if not isin(seat.Parent.Name, planeNames) then
+				for i, part in ipairs(seat.Parent:GetChildren()) do
+					if part.Name ~= "Seat" then
+						part:Destroy()
+					end
+				end
+			end
+		end]]
+		
 		if localRootPart then
 			rootPart.CFrame = localRootPart.CFrame * CFrame.new(0, 0, -10)
 		end
@@ -200,54 +113,31 @@ local function shoot()
 	ShootEvent:FireServer(unpack(args))
 end
 
-local sequence2 = false
-
-print("Starting")
-center = CFrame.new(0, 0, 0)
-workspace.ChildAdded:Connect(function(child)
-	if not sequence2 then
-		task.defer(function()
-			if child and child.Parent and child.name == "bullet" then
-				child:Destroy()
-			end
-		end)
-	end
-end)
-
-
-noclip()
-spawn(unsit)
-spawn(fling)
-spawn(spin)
-spawn(respawncheck)
-
-local sequence1 = true
 spawn(function()
-	task.wait(60)
-	sequence1 = false
+	task.wait(10)
+	hopServer()
 end)
-repeat RunService.Heartbeat:Wait()
-	local ships = processAll(shipNames)
-	if #ships ~= 0 then
-		for i, ship in ipairs(ships) do
-			local Seat = ship:FindFirstChild("Seat")
 
-			local ticks = 0
-			repeat RunService.Heartbeat:Wait()
-				if Seat then center = Seat.CFrame end
-				ticks += 1
-			until not Seat or (Seat and Seat.Velocity and Seat.Velocity.Magnitude > 2000) or ticks > 100
-		end
-	else
-		sequence1 = false
+local status, err = pcall(function()
+	local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
+	local d=game:GetService("HttpService"):JSONDecode(r.Body)
+	local targets = {}
+	for key, value in pairs(d) do
+		table.insert(targets, string.lower(key))
 	end
-until not sequence1
 
-print("Sequence 1 finished")
-repeat task.wait() until speaker.Character:FindFirstChild("Humanoid") and speaker.Character.Humanoid.Health > 0
-sitting = false
-flinging = false
-spinning = false
+
+	local data = {}
+	for _, p in pairs(Players:GetPlayers()) do
+		if isin(string.lower(p.Name), targets) then
+			hopServer()	
+		end
+		local l = p:FindFirstChild("leaderstats")
+		data[p.Name]={l.Score.Value,l.Win.Value,l.Coin.Value,p.Team.Name,p.DisplayName,p.UserId}
+	end
+
+	request({Url="https://server.blitzmarine.com/api/update?&bot="..speaker.Name,Method="POST",Body=game:GetService("HttpService"):JSONEncode({id=game.JobId,players=data,islands={},japan=1,usa=1,vehicles={},time=1}),Headers={["Content-Type"]="application/json"}})
+end)
 
 local parts = {}
 if speaker.Team.Name == "Japan" then
@@ -269,13 +159,15 @@ if speaker.Team.Name == "Japan" then
 else
 	KillPlanes(seat.CFrame, "Japan")
 end
+task.wait(.5)
 
 
 sequence2 = true
 spawn(function()
-	task.wait(2)
+	task.wait(3)
 	sequence2 = false
 end)
+
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(character)
 		if player.Team ~= speaker.Team then
