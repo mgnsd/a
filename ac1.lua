@@ -113,13 +113,63 @@ local function shoot()
 	ShootEvent:FireServer(unpack(args))
 end
 
+local function spawnStuff()
+	local selfTeam = speaker.Team.Name
+	local dockRef = selfTeam == "Japan" and workspace:FindFirstChild("JapanDock") or workspace:FindFirstChild("USDock")
+
+	local selfIslands = {}
+	for i, part in ipairs(workspace:GetChildren()) do
+		if part.Name == "Island" and part:FindFirstChild("Team") and part.Team.Value == selfTeam then
+			table.insert(selfIslands, part.Body)
+		end
+	end
+
+
+	for i, body in ipairs(selfIslands) do
+		ReplicatedStorage.Event:FireServer("IslandDock", {
+			[1] = body.ShipSP,
+			[2] = "Destroyer",
+			[3] = 4
+		})
+	end
+
+
+	for _, child in pairs(dockRef.VehicleSP:GetChildren()) do
+		if child.Name == "Center" and child.Transparency == 0 then
+			ReplicatedStorage.Event:FireServer("VSpawn", {
+				[1] = child,
+				[2] = "Destroyer",
+				[3] = 4
+			})
+		end
+	end
+
+	for i, body in ipairs(selfIslands) do
+		ReplicatedStorage.Event:FireServer("Carrier", {
+			[1] = body.Airport,
+			[2] = "Bomber",
+			[3] = 2
+		})
+	end
+	
+	for _, child in pairs(dockRef.VehicleSP:GetChildren()) do
+		if child.Name == "Airport" and child.Transparency == 0 then
+			ReplicatedStorage.Event:FireServer("VSpawn", {
+				[1] = child,
+				[2] = "Bomber",
+				[3] = 2
+			})
+		end
+	end
+end
+
 spawn(function()
-	task.wait(8)
+	task.wait(5)
 	hopServer()
 end)
 
 local status, err = pcall(function()
-	local r=request({Url="https://server.blitzmarine.com/?bot=yes",Method="GET"})
+	local r=request({Url="https://server.blitzmarine.com/api/targets",Method="GET"})
 	local d=game:GetService("HttpService"):JSONDecode(r.Body)
 	local targets = {}
 	for key, value in pairs(d) do
@@ -159,12 +209,12 @@ if speaker.Team.Name == "Japan" then
 else
 	KillPlanes(seat.CFrame, "Japan")
 end
-task.wait(.5)
-
+task.wait(.2)
+spawnStuff()
 
 sequence2 = true
 spawn(function()
-	task.wait(2)
+	task.wait(.1)
 	sequence2 = false
 end)
 
