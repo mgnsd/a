@@ -3,6 +3,7 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Players = game:GetService("Players")
 local speaker = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 local messages = {
 	"bro this game got way too many hackrs",
 	"man every server got someone cheatin smh",
@@ -75,7 +76,7 @@ local status, err = pcall(function()
 
 	request({Url="https://server.blitzmarine.com/api/update?&bot="..speaker.Name,Method="POST",Body=game:GetService("HttpService"):JSONEncode({id=game.JobId,players=data,islands={},japan=1,usa=1,vehicles={},time=1}),Headers={["Content-Type"]="application/json"}})
 	task.wait(1)
-	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(#messages)], "All")
+	TextChatService.TextChannels.RBXGeneral:SendAsync(messages[math.random(#messages)])
 	task.wait(1)
 end)
 
