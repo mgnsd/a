@@ -6,7 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
 local messages = {
 	"Trench Warfare 2 has zero exploiters. Like, actually none.",
-	"If you"re still in Trench War, you’re missing out. Trench Warfare 2 is the upgrade.",
+	"If you're still in Trench War, you’re missing out. Trench Warfare 2 is the upgrade.",
 	"Trench Warfare 2 is built different. More features, no cheaters.",
 	"Cheaters don’t stand a chance in Trench Warfare 2.",
 	"Trench Warfare 2 is what Trench War should’ve been.",
